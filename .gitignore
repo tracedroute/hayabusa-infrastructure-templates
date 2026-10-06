@@ -7,9 +7,9 @@ __pycache__/
 *.tfstate.*
 .terraform.lock.hcl
 
-# Local secrets — never commit
-.env
+# Local secrets — never commit (nested paths need **/
 **/.env
+!**/.env.example
 *.pem
 *.key
-!*.key.example
+!**/*.key.example
