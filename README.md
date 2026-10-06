@@ -63,3 +63,10 @@ CI runs `check_iac_tree.py` on push/PR. Forbidden nests, tracked `.env` secrets,
 - Prefer `.env.example`; never commit `.env`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the PR checklist.
+
+## Docs
+
+- [Workspace migration](docs/WORKSPACE_MIGRATION.md)
+- [Smoke matrix](docs/SMOKE_MATRIX.md)
+- [Secret rotation](docs/SECRET_ROTATION.md)
+- [Contributing / PR checklist](CONTRIBUTING.md)

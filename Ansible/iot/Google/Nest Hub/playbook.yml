@@ -7,13 +7,12 @@
     iot_make: "Google"
     iot_model: "Nest Hub"
     iot_device_id: "google_nest_hub"
-    iot_integration_hint: "Vendor cloud API, local bridge API, or Home Assistant entity management"
+    iot_integration_hint: "Google Home / Nest via Home Assistant nest integration or Smart Device Management API"
     iot_device_host: "{{ lookup('env', 'IOT_DEVICE_HOST') | default('', true) }}"
-    iot_probe_scheme: "{{ lookup('env', 'IOT_PROBE_SCHEME') | default('http', true) }}"
+    iot_probe_scheme: "{{ lookup('env', 'IOT_PROBE_SCHEME') | default('https', true) }}"
     iot_probe_paths:
       - /
       - /status
-      - /api/status
     home_assistant_url: "{{ lookup('env', 'HOME_ASSISTANT_URL') | default('', true) }}"
     home_assistant_token: "{{ lookup('env', 'HOME_ASSISTANT_TOKEN') | default('', true) }}"
     home_assistant_entity_id: "{{ lookup('env', 'HOME_ASSISTANT_ENTITY_ID') | default('', true) }}"

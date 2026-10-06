@@ -15,3 +15,9 @@ jobs:
           python-version: "3.12"
       - name: Tree hygiene (no mutations)
         run: python3 scripts/check_iac_tree.py .
+      - name: Smoke / wiring (no device I/O)
+        run: python3 scripts/smoke_iac_tree.py
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

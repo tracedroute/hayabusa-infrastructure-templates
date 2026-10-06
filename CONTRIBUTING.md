@@ -21,3 +21,7 @@ Default OpenTofu (Creation) and Ansible (Configuration) trees for the Fleet cons
 - Rename `Ansible/Security/` — Core Security tab and SECops queue hard-depend on it
 - Hand-edit only the baked Core defaults tree; change this repo and sync defaults from here
 - Commit secrets (API keys, passwords, tokens)
+
+## Secrets
+
+Run gitleaks locally when possible. Never commit `.env`. See [docs/SECRET_ROTATION.md](docs/SECRET_ROTATION.md).

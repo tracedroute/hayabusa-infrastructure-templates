@@ -7,13 +7,14 @@
     iot_make: "Shelly"
     iot_model: "Sensor"
     iot_device_id: "shelly_sensor"
-    iot_integration_hint: "Local LAN HTTP API when enabled, or Home Assistant entity management"
+    iot_integration_hint: "Shelly local Gen1/Gen2 HTTP API"
     iot_device_host: "{{ lookup('env', 'IOT_DEVICE_HOST') | default('', true) }}"
     iot_probe_scheme: "{{ lookup('env', 'IOT_PROBE_SCHEME') | default('http', true) }}"
     iot_probe_paths:
       - /
       - /status
-      - /api/status
+      - /rpc/Shelly.GetDeviceInfo
+      - /shelly
     home_assistant_url: "{{ lookup('env', 'HOME_ASSISTANT_URL') | default('', true) }}"
     home_assistant_token: "{{ lookup('env', 'HOME_ASSISTANT_TOKEN') | default('', true) }}"
     home_assistant_entity_id: "{{ lookup('env', 'HOME_ASSISTANT_ENTITY_ID') | default('', true) }}"

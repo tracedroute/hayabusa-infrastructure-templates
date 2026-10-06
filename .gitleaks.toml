@@ -1,0 +1,11 @@
+title = "hayabusa-infrastructure-templates"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Examples and docs"
+paths = [
+  '''(?i)\.env\.example$''',
+  '''(?i)docs/SECRET_ROTATION\.md$''',
+]

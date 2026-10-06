@@ -7,13 +7,14 @@
     iot_make: "Reolink"
     iot_model: "Camera"
     iot_device_id: "reolink_camera"
-    iot_integration_hint: "Local LAN HTTP API when enabled, or Home Assistant entity management"
+    iot_integration_hint: "Reolink HTTP API / RTSP; local camera web UI or Home Assistant Reolink integration"
     iot_device_host: "{{ lookup('env', 'IOT_DEVICE_HOST') | default('', true) }}"
     iot_probe_scheme: "{{ lookup('env', 'IOT_PROBE_SCHEME') | default('http', true) }}"
     iot_probe_paths:
       - /
+      - /api.cgi
+      - /cgi-bin/api.cgi
       - /status
-      - /api/status
     home_assistant_url: "{{ lookup('env', 'HOME_ASSISTANT_URL') | default('', true) }}"
     home_assistant_token: "{{ lookup('env', 'HOME_ASSISTANT_TOKEN') | default('', true) }}"
     home_assistant_entity_id: "{{ lookup('env', 'HOME_ASSISTANT_ENTITY_ID') | default('', true) }}"
