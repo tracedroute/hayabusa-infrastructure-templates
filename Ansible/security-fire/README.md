@@ -35,3 +35,7 @@ SECURITY_PANEL_HOST=vms.example.com SECURITY_PANEL_TOKEN=... \
 
 Use Hayabusa Craft → Workstations → **Ansible & OpenTofu** to browse and run these under
 `Security & Fire Systems/`.
+
+## Not SECops
+
+SECops tool playbooks live under `../Security/` (Fleet Security tab). This tree is building Security & Fire Systems only.

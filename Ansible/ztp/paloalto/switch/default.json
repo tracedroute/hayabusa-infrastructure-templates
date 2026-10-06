@@ -3,7 +3,7 @@
   "vendor": "paloalto",
   "config_template": "panos-switch",
   "pnp_server": "pnpserver.local",
-  "tftp_root": "/var/lib/peregrine/ztp/tftp",
+  "dhcp_profile": "default-dhcp-profile",
   "configuration": {
     "system": {
       "hostname": "paloalto-switch-ztp",
@@ -15,73 +15,48 @@
       }
     },
     "network": {
-      "vlans": [
-        {
-          "name": "default",
-          "vlan_id": 1
-        },
-        {
-          "name": "data",
-          "vlan_id": 10
-        },
-        {
-          "name": "voice",
-          "vlan_id": 20
-        }
-      ],
       "interfaces": [
         {
           "name": "ethernet1/1",
-          "mode": "access",
-          "access_vlan": "data",
-          "description": "Data Port 1"
-        },
-        {
-          "name": "ethernet1/2",
-          "mode": "access",
-          "access_vlan": "voice",
-          "description": "Voice Port 1"
+          "mode": "layer2",
+          "zone": "trust",
+          "description": "Access / downlink",
+          "vlan": 10
         },
         {
           "name": "ethernet1/24",
-          "mode": "trunk",
-          "allowed_vlans": ["default", "data", "voice"],
-          "description": "Uplink Trunk"
+          "mode": "layer2",
+          "zone": "trust",
+          "description": "Uplink trunk",
+          "vlan_members": [
+            1,
+            10,
+            20
+          ]
         }
       ],
-      "layer3_interfaces": [
+      "vlans": [
         {
-          "name": "vlan10",
-          "ip": "192.168.10.1",
-          "netmask": "255.255.255.0",
-          "description": "Data VLAN Interface"
+          "id": 1,
+          "name": "default"
         },
         {
-          "name": "vlan20",
-          "ip": "192.168.20.1",
-          "netmask": "255.255.255.0",
-          "description": "Voice VLAN Interface"
+          "id": 10,
+          "name": "data"
+        },
+        {
+          "id": 20,
+          "name": "voice"
         }
       ]
     },
     "security": {
-      "zones": [
-        {
-          "name": "trust",
-          "interfaces": ["ethernet1/1", "ethernet1/2"]
-        },
-        {
-          "name": "untrust",
-          "interfaces": []
-        }
-      ],
       "rules": [
         {
-          "name": "inter-zone-allow",
+          "name": "allow-intra-trust",
           "from": "trust",
           "to": "trust",
-          "action": "allow",
-          "description": "Allow intra-zone traffic"
+          "action": "allow"
         }
       ]
     }

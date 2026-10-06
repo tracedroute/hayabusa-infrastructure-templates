@@ -46,3 +46,5 @@ Duplicate-content warnings list paths for review; they do **not** auto-delete. W
 - Design & Deploy library snippets (`catalog.json`) are a separate surface from this
   console workspace seed.
 - Controller ↔ Core defaults sync is out of scope for this repo’s hygiene CI.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the PR checklist.

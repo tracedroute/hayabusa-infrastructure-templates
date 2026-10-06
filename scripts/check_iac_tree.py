@@ -3,11 +3,13 @@
 
 Does not modify files. Creation/Configuration ZTP pairs
 (OpenTofu/ztp ↔ Ansible/ztp) are intentional and are not treated as
-duplicate-content failures.
+duplicate-content failures. Symlinks to shared templates are preferred
+over byte-identical copies.
 """
 from __future__ import annotations
 
 import hashlib
+import json
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -34,19 +36,19 @@ EXPECTED = [
     "Ansible/iot",
     "Ansible/scada",
     "Ansible/residential",
+    "Ansible/residential/_shared",
     "Ansible/security-fire",
-    "Ansible/Security",
+    "Ansible/Security",  # SECops — capital S required by Core
 ]
 
-# Exact-copy pairs across these roots are expected (working ZTP lives in both tabs).
 INTENTIONAL_PAIR_ROOTS = (
     ("OpenTofu/ztp/", "Ansible/ztp/"),
 )
 
+VENDOR_FROM_PATH = ("cisco", "juniper", "arista", "aruba", "paloalto", "proxmox", "vmware")
+
 
 def _is_intentional_pair(paths: list[str]) -> bool:
-    """True when every path is under a Creation↔Configuration ZTP pair and
-    each relative-under-ztp appears at most once per side."""
     if len(paths) != 2:
         return False
     a, b = sorted(paths)
@@ -57,12 +59,18 @@ def _is_intentional_pair(paths: list[str]) -> bool:
 
 
 def _dup_bucket_paths(paths: list[str]) -> list[str]:
-    """Drop intentional Creation↔Configuration ZTP pairs from a hash group."""
     if _is_intentional_pair(paths):
         return []
-    # If a larger group is only OT/ztp + AN/ztp mirrors plus extras, keep all
-    # for visibility — do not silently hide extras.
     return paths
+
+
+def _vendor_from_rel(rel: str) -> str | None:
+    parts = Path(rel).parts
+    for p in parts:
+        pl = p.lower()
+        if pl in VENDOR_FROM_PATH:
+            return pl
+    return None
 
 
 def main(root: Path) -> int:
@@ -88,9 +96,43 @@ def main(root: Path) -> int:
         if not (root / rel).exists():
             warnings.append(f"expected path missing: {rel}")
 
+    # ZTP default.json vendor/device_type must match path (do not silently ship cross-vendor clones)
+    for base in ("OpenTofu/ztp", "Ansible/ztp"):
+        base_p = root / base
+        if not base_p.is_dir():
+            continue
+        for p in base_p.rglob("default.json"):
+            if p.is_symlink() or not p.is_file():
+                continue
+            rel = str(p.relative_to(root))
+            try:
+                data = json.loads(p.read_text(encoding="utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+                errors.append(f"invalid ZTP default JSON {rel}: {exc}")
+                continue
+            if not isinstance(data, dict):
+                errors.append(f"ZTP default must be object: {rel}")
+                continue
+            path_vendor = _vendor_from_rel(rel)
+            file_vendor = str(data.get("vendor") or "").strip().lower()
+            if path_vendor and file_vendor and path_vendor != file_vendor:
+                errors.append(
+                    f"ZTP vendor mismatch in {rel}: path={path_vendor} json.vendor={file_vendor}"
+                )
+            path_dtype = None
+            for part in Path(rel).parts:
+                if part in {"router", "switch", "firewall"}:
+                    path_dtype = part
+                    break
+            file_dtype = str(data.get("device_type") or "").strip().lower()
+            if path_dtype and file_dtype and path_dtype != file_dtype:
+                errors.append(
+                    f"ZTP device_type mismatch in {rel}: path={path_dtype} json.device_type={file_dtype}"
+                )
+
     by_hash: dict[str, list[str]] = defaultdict(list)
     for p in root.rglob("*"):
-        if ".git" in p.parts or not p.is_file() or p.is_symlink():
+        if ".git" in p.parts or p.is_symlink() or not p.is_file():
             continue
         try:
             size = p.stat().st_size
@@ -98,8 +140,12 @@ def main(root: Path) -> int:
             continue
         if size > 512_000 or size == 0:
             continue
+        # Skip shared sources themselves from "duplicate" noise when many linkers exist
+        rel = str(p.relative_to(root))
+        if "/_shared/" in rel.replace("\\", "/") or rel.startswith("OpenTofu/templates/"):
+            continue
         h = hashlib.sha256(p.read_bytes()).hexdigest()
-        by_hash[h].append(str(p.relative_to(root)))
+        by_hash[h].append(rel)
 
     review: list[tuple[str, list[str]]] = []
     for h, paths in by_hash.items():
@@ -110,7 +156,7 @@ def main(root: Path) -> int:
     if review:
         warnings.append(
             f"{len(review)} content hashes appear 3+ times outside intentional "
-            f"OpenTofu/ztp↔Ansible/ztp pairs (review; do not auto-delete)"
+            f"OpenTofu/ztp↔Ansible/ztp pairs and shared templates (review; do not auto-delete)"
         )
         for h, paths in sorted(review, key=lambda x: -len(x[1]))[:12]:
             sample = paths[:8]

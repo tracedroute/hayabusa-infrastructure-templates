@@ -1,0 +1,8 @@
+---
+- name: Yale Connect Bridge — placeholder health check
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ready for vendor API wiring
+      ansible.builtin.debug:
+        msg: "Extend this playbook for Yale Connect Bridge; keep credentials out of git."

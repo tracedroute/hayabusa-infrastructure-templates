@@ -1,12 +1,12 @@
 {
-  "device_type": "router",
+  "device_type": "switch",
   "vendor": "paloalto",
-  "config_template": "panos",
+  "config_template": "panos-switch",
   "pnp_server": "pnpserver.local",
   "dhcp_profile": "default-dhcp-profile",
   "configuration": {
     "system": {
-      "hostname": "paloalto-router-ztp",
+      "hostname": "paloalto-switch-ztp",
       "domain": "local",
       "update_schedule": {
         "enabled": true,
@@ -18,25 +18,44 @@
       "interfaces": [
         {
           "name": "ethernet1/1",
-          "ip": "dhcp",
-          "zone": "untrust",
-          "description": "WAN"
+          "mode": "layer2",
+          "zone": "trust",
+          "description": "Access / downlink",
+          "vlan": 10
         },
         {
-          "name": "ethernet1/2",
-          "ip": "192.168.1.1",
-          "netmask": "255.255.255.0",
+          "name": "ethernet1/24",
+          "mode": "layer2",
           "zone": "trust",
-          "description": "LAN"
+          "description": "Uplink trunk",
+          "vlan_members": [
+            1,
+            10,
+            20
+          ]
+        }
+      ],
+      "vlans": [
+        {
+          "id": 1,
+          "name": "default"
+        },
+        {
+          "id": 10,
+          "name": "data"
+        },
+        {
+          "id": 20,
+          "name": "voice"
         }
       ]
     },
     "security": {
       "rules": [
         {
-          "name": "allow-trust-to-untrust",
+          "name": "allow-intra-trust",
           "from": "trust",
-          "to": "untrust",
+          "to": "trust",
           "action": "allow"
         }
       ]

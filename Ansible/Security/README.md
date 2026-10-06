@@ -41,3 +41,7 @@ ansible-playbook playbooks/nuclei.yml \
   -e secops_target=https://lab.example \
   -e secops_timeout_sec=300
 ```
+
+## Not Security & Fire
+
+Building/PACS/VMS/fire content lives under `../security-fire/`. Keep this directory named `Security`.

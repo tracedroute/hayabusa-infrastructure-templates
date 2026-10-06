@@ -1,0 +1,8 @@
+---
+- name: Google Nest Hub — placeholder health check
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ready for vendor API wiring
+      ansible.builtin.debug:
+        msg: "Extend this playbook for Google Nest Hub; keep credentials out of git."

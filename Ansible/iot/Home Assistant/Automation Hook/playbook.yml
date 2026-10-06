@@ -1,0 +1,8 @@
+---
+- name: Home Assistant Automation Hook — placeholder health check
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ready for vendor API wiring
+      ansible.builtin.debug:
+        msg: "Extend this playbook for Home Assistant Automation Hook; keep credentials out of git."

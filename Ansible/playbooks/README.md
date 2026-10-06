@@ -1,3 +1,4 @@
-# Top-level ansible/playbooks
+# Shared / lab playbooks
 
-Optional scratch area. Preferred project root is my-tofu-project/ansible.
+General Configuration playbooks. SECops-oriented copies under `../Security/playbooks/` may differ
+(extra vars, controller queue hints) — keep both; do not delete one as a “duplicate” without a diff check.

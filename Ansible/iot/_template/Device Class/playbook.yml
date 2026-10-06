@@ -1,0 +1,9 @@
+---
+# Placeholder health/discovery playbook — extend per vendor API.
+- name: IoT device class — placeholder
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Document required vars
+      ansible.builtin.debug:
+        msg: "Set vendor connection vars in group_vars or inventory; replace this stub with real API checks."
