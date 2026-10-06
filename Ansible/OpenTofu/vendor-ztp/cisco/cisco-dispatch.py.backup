@@ -1,0 +1,132 @@
+#!/usr/bin/env python
+"""
+Cisco ZTP dispatcher - Native Shell Version.
+Optimized for devices without Guestshell and to avoid routing conflicts.
+"""
+
+import json
+import re
+import sys
+import cli  # Native Cisco library
+
+# Use urllib instead of requests for compatibility with the native shell
+try:
+    import urllib.request as urllib2
+except ImportError:
+    import urllib2
+
+# Constants
+PEREGRINE_HOST = "192.168.2.1"
+API_URL = "http://%s:8086/api/device/register" % PEREGRINE_HOST
+
+def run_cli(command):
+    """Executes a command using the native CLI module."""
+    try:
+        return cli.execute(command)
+    except Exception:
+        return ""
+
+def apply_commands(commands, os_family):
+    """
+    Applies configuration as a single block.
+    This prevents 'IP Conflict' errors from hanging individual command sessions.
+    """
+    try:
+        # 'file prompt quiet' ensures 'write memory' doesn't ask for confirmation
+        full_config = ["file prompt quiet"] + commands + ["end"]
+        config_string = "\n".join(full_config)
+        
+        cli.configure(config_string)
+        
+        if os_family != "ios-xr":
+            # Native shells sometimes prefer 'copy run start' in scripts
+            cli.execute("copy running-config startup-config")
+        return True
+    except Exception as e:
+        sys.stderr.write("Failed to apply configuration: %s\n" % str(e))
+        return False
+
+def detect_platform():
+    """Detects OS and Model to determine config logic."""
+    show_version = run_cli("show version")
+    show_inventory = run_cli("show inventory")
+    combined = "\n".join([show_version, show_inventory])
+    fingerprint = combined.lower()
+
+    os_family = "ios-xe" if "ios-xe" in fingerprint or "ios xe" in fingerprint else "ios"
+    
+    model = "unknown"
+    match = re.search(r"PID:\s*([A-Za-z0-9\-]+)", show_inventory)
+    if match:
+        model = match.group(1)
+        
+    return os_family, model
+
+def collect_system_info():
+    """Gathers device details for the Peregrine API."""
+    info = {}
+    # Extract hostname
+    hostname_raw = run_cli('show run | i hostname')
+    info['hostname'] = hostname_raw.replace('hostname', '').strip() or "Router"
+    
+    # Extract Model and Serial
+    info['model'] = run_cli('show version | i Cisco').strip()
+    info['serial_number'] = run_cli('show version | i Processor board ID').strip()
+    
+    # Get current IP info
+    info['ip_address'] = run_cli('show ip interface brief | exclude unassigned').strip()
+    info['status'] = 'configured'
+    return info
+
+def report_to_peregrine(system_info):
+    """Sends JSON data to the Peregrine server via urllib."""
+    payload = json.dumps(system_info).encode('utf-8')
+    
+    try:
+        req = urllib2.Request(API_URL, data=payload, headers={'Content-Type': 'application/json'})
+        response = urllib2.urlopen(req, timeout=5)
+        print('Successfully reported to Peregrine: Status %s' % response.getcode())
+    except Exception as e:
+        print('Note: Could not reach Peregrine API (Server might be down or routing restricted)')
+        print('Error detail: %s' % str(e))
+
+def main():
+    print("\n--- Starting Native ZTP Dispatcher ---")
+    
+    os_family, model = detect_platform()
+    print("Detected: %s on Model %s" % (os_family, model))
+
+    # Check for IP Conflict with Peregrine Host
+    local_ips = run_cli("show ip interface brief")
+    if PEREGRINE_HOST in local_ips:
+        print("WARNING: PEREGRINE_HOST (%s) is an IP on THIS router." % PEREGRINE_HOST)
+        print("API reporting will be skipped to prevent routing loops.")
+        can_report = False
+    else:
+        can_report = True
+
+    # Define the base configuration
+    # Note: We include 'no shutdown' to ensure the ZTP interface stays alive
+    config_payload = [
+        "username admin privilege 15 password Cisco123",
+        "enable secret Cisco123",
+        "ip ssh version 2",
+        "line vty 0 4",
+        "login local",
+        "transport input ssh",
+        "transport output ssh"
+    ]
+    
+    print("Applying configuration block...")
+    if apply_commands(config_payload, os_family):
+        print("Configuration successfully applied and saved.")
+
+    if can_report:
+        print("Collecting system info and reporting...")
+        system_info = collect_system_info()
+        report_to_peregrine(system_info)
+    
+    print("--- ZTP complete ---\n")
+
+if __name__ == "__main__":
+    main()
