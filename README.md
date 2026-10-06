@@ -30,11 +30,19 @@ Cisco, Arista, Aruba, Juniper, Palo Alto — plus Proxmox / VMware under Ansible
 ## Hygiene
 
 ```bash
-python3 scripts/check_iac_tree.py .
-python3 scripts/cleanup_iac_defaults_tree.py .   # idempotent re-canonicalize
+python3 scripts/check_iac_tree.py .              # CI / local; never mutates
+python3 scripts/cleanup_iac_defaults_tree.py .   # idempotent re-canonicalize only
 ```
+
+GitHub Actions runs `check_iac_tree.py` on push/PR. Forbidden nests fail the job.
+Duplicate-content warnings list paths for review; they do **not** auto-delete.
 
 ## Notes
 
 - Do **not** nest Ansible under `OpenTofu/` or OpenTofu under `Ansible/`.
-- Design & Deploy library snippets (`catalog.json`) are a separate surface from this console workspace seed.
+- `OpenTofu/ztp/` and `Ansible/ztp/` are an intentional Creation/Configuration pair.
+  Working vendor dispatch scripts and device defaults live there — do not “dedupe”
+  them away. Exact mirrors across those two roots are expected.
+- Design & Deploy library snippets (`catalog.json`) are a separate surface from this
+  console workspace seed.
+- Controller ↔ Core defaults sync is out of scope for this repo’s hygiene CI.
