@@ -102,10 +102,14 @@ def main(root: Path) -> int:
         import subprocess
 
         try:
-            tracked = subprocess.check_output(
-                ["git", "-C", str(root), "ls-files", "*.env", "**/.env"],
-                text=True,
-            ).splitlines()
+            tracked = [
+                line
+                for line in subprocess.check_output(
+                    ["git", "-C", str(root), "ls-files"],
+                    text=True,
+                ).splitlines()
+                if line.endswith(".env") and not line.endswith(".env.example")
+            ]
         except (OSError, subprocess.CalledProcessError):
             tracked = []
         for rel in tracked:
