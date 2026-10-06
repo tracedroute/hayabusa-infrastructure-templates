@@ -1,0 +1,5 @@
+# Working ZTP / SCADA need careful review
+/OpenTofu/ztp/ @tracedroute
+/Ansible/ztp/ @tracedroute
+/Ansible/scada/ @tracedroute
+/Ansible/Security/ @tracedroute

@@ -70,3 +70,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the PR checklist.
 - [Smoke matrix](docs/SMOKE_MATRIX.md)
 - [Secret rotation](docs/SECRET_ROTATION.md)
 - [Contributing / PR checklist](CONTRIBUTING.md)
+- Design & Deploy **Fleet Console** bridges include **Open in Fleet** deep links into the crafting workspace.

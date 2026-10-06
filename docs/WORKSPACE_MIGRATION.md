@@ -40,3 +40,13 @@ Workspace seed **never overwrites** files that already exist in the user’s tre
 - PR / contribution rules: [CONTRIBUTING.md](../CONTRIBUTING.md)
 - CI smoke labels: [SMOKE_MATRIX.md](SMOKE_MATRIX.md)
 - Secret rotation after history purge: [SECRET_ROTATION.md](SECRET_ROTATION.md)
+
+## Design & Deploy → Fleet deep links
+
+Fleet Console bridge templates in Design & Deploy expose **Open in Fleet**, which navigates to:
+
+```
+/workstations?devops=1&path=<workspace_rel>&mode=creation|configuration|security
+```
+
+The devops-iac console auto-opens, seeds if needed (no-clobber), and browses or edits that path.

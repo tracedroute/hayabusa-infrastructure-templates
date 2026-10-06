@@ -4,6 +4,11 @@
 #   ./run_scada_pack.sh openplc-modbus [inventory-file]
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CHECK_ONLY=0
+if [[ "${1:-}" == "--check" ]]; then
+  CHECK_ONLY=1
+  shift
+fi
 PACK_NAME="${1:-}"
 INV="${2:-$ROOT/inventory.example.yml}"
 if [[ -z "$PACK_NAME" ]]; then
@@ -32,7 +37,12 @@ while IFS= read -r line; do
     echo "SKIP missing playbook: $line" >&2
     continue
   fi
-  echo "=== ansible-playbook $line ==="
-  ansible-playbook -i "$INV" "$pb"
+  if [[ "$CHECK_ONLY" == "1" ]]; then
+    echo "=== ansible-playbook --syntax-check $line ==="
+    ansible-playbook --syntax-check -i localhost, -c local "$pb"
+  else
+    echo "=== ansible-playbook $line ==="
+    ansible-playbook -i "$INV" "$pb"
+  fi
 done < "$SEQ"
 echo "OK pack $PACK_NAME finished"
