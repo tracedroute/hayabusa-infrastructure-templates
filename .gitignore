@@ -6,3 +6,10 @@ __pycache__/
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+
+# Local secrets — never commit
+.env
+**/.env
+*.pem
+*.key
+!*.key.example

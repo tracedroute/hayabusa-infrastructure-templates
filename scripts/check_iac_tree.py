@@ -96,6 +96,45 @@ def main(root: Path) -> int:
         if not (root / rel).exists():
             warnings.append(f"expected path missing: {rel}")
 
+    # Never ship secrets: tracked .env files are forbidden
+    git_dir = root / ".git"
+    if git_dir.exists():
+        import subprocess
+
+        try:
+            tracked = subprocess.check_output(
+                ["git", "-C", str(root), "ls-files", "*.env", "**/.env"],
+                text=True,
+            ).splitlines()
+        except (OSError, subprocess.CalledProcessError):
+            tracked = []
+        for rel in tracked:
+            if rel.endswith(".env") and not rel.endswith(".env.example"):
+                errors.append(f"tracked secret file (remove from git): {rel}")
+
+    # Working ZTP dispatch scripts must remain non-empty (do not "clean" them away)
+    for ztp_root in (root / "OpenTofu" / "ztp", root / "Ansible" / "ztp"):
+        if not ztp_root.is_dir():
+            continue
+        for p in ztp_root.rglob("*"):
+            if not p.is_file() or p.is_symlink():
+                continue
+            name = p.name
+            if name.endswith("-dispatch") or name in {"ztp.sh", "cisco.py", "cisco-xr.py"}:
+                if p.stat().st_size < 20:
+                    errors.append(f"ZTP script empty or truncated: {p.relative_to(root)}")
+
+    # IoT stubs must use the V2 health pattern (placeholder-only playbooks fail)
+    iot = root / "Ansible" / "iot"
+    if iot.is_dir():
+        for p in iot.rglob("playbook.yml"):
+            if "_template" in p.parts:
+                continue
+            text = p.read_text(encoding="utf-8", errors="replace")
+            low = text.lower()
+            if "placeholder" in low or "extend this playbook" in low or "ready for vendor api" in low:
+                errors.append(f"IoT playbook still placeholder stub: {p.relative_to(root)}")
+
     # ZTP default.json vendor/device_type must match path (do not silently ship cross-vendor clones)
     for base in ("OpenTofu/ztp", "Ansible/ztp"):
         base_p = root / base

@@ -8,24 +8,41 @@ Default **OpenTofu** (Creation) and **Ansible** (Configuration) trees for the Ha
 OpenTofu/                 # Creation tab
   environments/
   modules/
+  templates/              # shared versions.tf / cloud-init
   ztp/<vendor>/           # Creation-side vendor ZTP (canonical)
   …
 
 Ansible/                  # Configuration tab
   inventory/              # single inventory home
   ztp/<vendor>/           # Configuration-side vendor ZTP (canonical)
-  iot/                    # IoT vendors
-  scada/                  # SCADA / PLC (includes openplc)
-  residential/            # residential routers & switches (+ APIs)
+  iot/                    # IoT vendors (+ _template, _shared)
+  scada/                  # SCADA / PLC (includes openplc) — many playbooks are live lab-tested
+  residential/            # residential routers & switches (+ device APIs)
   security-fire/          # security & fire systems
-  Security/               # SECops playbooks
+  Security/               # SECops playbooks (capital S required by Core)
   bare-metal-ztp/         # PXE / image recipes
   playbooks/, roles/, group_vars/
 ```
 
-## Vendors (ZTP)
+## Supported surface (expand here; don't delete)
 
-Cisco, Arista, Aruba, Juniper, Palo Alto — plus Proxmox / VMware under Ansible ZTP where present.
+| Area | Supported vendors / packs |
+|------|---------------------------|
+| **ZTP** | Cisco, Arista, Aruba, Juniper, Palo Alto (+ Proxmox / VMware docs under Ansible ZTP) |
+| **IoT** | All folders under `Ansible/iot/` (Amazon → Yale, Home Assistant, protocols, …) |
+| **Residential APIs** | Per-device `*-router-api` / `*-switch-api` trees (working scaffolds — do not overwrite) |
+| **SCADA / PLC** | OpenPLC v4, Modbus, Rockwell, Siemens, Beckhoff, Mitsubishi, Omron, Schneider, OPC UA, FUXA |
+| **Security & Fire** | `security-fire/` playbooks |
+| **SECops** | `Security/` playbooks |
+| **Bare metal** | Ubuntu/Debian/Proxmox/Windows/ESXi + network-OS ZTP recipes |
+
+## Scaffolding (additive only)
+
+```bash
+python3 scripts/scaffold_iot_device.py --vendor Acme --device "Smart Plug"
+python3 scripts/scaffold_residential_api.py --kind routers --vendor acme --slug acme-widget-router-api --title "Acme Widget"
+python3 scripts/link_residential_requirements.py .
+```
 
 ## Hygiene
 
@@ -34,17 +51,15 @@ python3 scripts/check_iac_tree.py .              # CI / local; never mutates
 python3 scripts/cleanup_iac_defaults_tree.py .   # idempotent re-canonicalize only
 ```
 
-Locally (and in CI once `.github/workflows/iac-hygiene.yml` is on `main`): run `check_iac_tree.py` on every change. Forbidden nests fail the check.
-Duplicate-content warnings list paths for review; they do **not** auto-delete. Working `OpenTofu/ztp` / `Ansible/ztp` mirrors are ignored as intentional pairs.
+CI runs `check_iac_tree.py` on push/PR. Forbidden nests, tracked `.env` secrets, empty ZTP scripts, and placeholder IoT stubs fail the job. Working `OpenTofu/ztp` ↔ `Ansible/ztp` mirrors are intentional.
 
 ## Notes
 
 - Do **not** nest Ansible under `OpenTofu/` or OpenTofu under `Ansible/`.
-- `OpenTofu/ztp/` and `Ansible/ztp/` are an intentional Creation/Configuration pair.
-  Working vendor dispatch scripts and device defaults live there — do not “dedupe”
-  them away. Exact mirrors across those two roots are expected.
-- Design & Deploy library snippets (`catalog.json`) are a separate surface from this
-  console workspace seed.
-- Controller ↔ Core defaults sync is out of scope for this repo’s hygiene CI.
+- Never edit working ZTP `*-dispatch` / `ztp.sh` / vendor `.py` / `.cfg` / `.conf` unless fixing a proven bug.
+- Never overwrite SCADA/OpenPLC playbooks or programs that already run in lab — add beside them.
+- `Ansible/Security/` and `Ansible/security-fire/` are different products; keep both.
+- Design & Deploy (`catalog.json`) is a separate surface from this console workspace seed.
+- Prefer `.env.example`; never commit `.env`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the PR checklist.

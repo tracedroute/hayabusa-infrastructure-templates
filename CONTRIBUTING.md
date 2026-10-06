@@ -11,9 +11,13 @@ Default OpenTofu (Creation) and Ansible (Configuration) trees for the Fleet cons
 - [ ] New IoT vendors copy from `Ansible/iot/_template/`; prefer adding device classes over deleting vendors
 - [ ] Identical `requirements.txt` / `versions.tf` / cloud-init examples prefer symlinks into `_shared/` or `OpenTofu/templates/`
 - [ ] `python3 scripts/check_iac_tree.py .` passes (CI runs this)
+- [ ] No `.env` files staged (use `.env.example` only)
+- [ ] SCADA/OpenPLC and ZTP dispatch changes are additive or proven bugfixes — not drive-by rewrites
 
 ## Do not
 
 - Rewrite or delete vendor ZTP scripts that boot/configure devices unless replacing with an equivalent
+- Overwrite residential `*-router-api` / `*-switch-api` apps that already work — scaffold new ones from `_shared/fastapi_skeleton`
 - Rename `Ansible/Security/` — Core Security tab and SECops queue hard-depend on it
 - Hand-edit only the baked Core defaults tree; change this repo and sync defaults from here
+- Commit secrets (API keys, passwords, tokens)
