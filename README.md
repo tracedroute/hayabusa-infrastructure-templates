@@ -34,8 +34,8 @@ python3 scripts/check_iac_tree.py .              # CI / local; never mutates
 python3 scripts/cleanup_iac_defaults_tree.py .   # idempotent re-canonicalize only
 ```
 
-GitHub Actions runs `check_iac_tree.py` on push/PR. Forbidden nests fail the job.
-Duplicate-content warnings list paths for review; they do **not** auto-delete.
+Locally (and in CI once `.github/workflows/iac-hygiene.yml` is on `main`): run `check_iac_tree.py` on every change. Forbidden nests fail the check.
+Duplicate-content warnings list paths for review; they do **not** auto-delete. Working `OpenTofu/ztp` / `Ansible/ztp` mirrors are ignored as intentional pairs.
 
 ## Notes
 
